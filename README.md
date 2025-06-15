@@ -22,7 +22,6 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// Fullscreen
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -30,7 +29,6 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Constants
 const GRAVITY = 0.4;
 const FLAP = -8;
 const GAP = 200;
@@ -38,11 +36,9 @@ const PIPE_WIDTH = 80;
 const BIRD_WIDTH = 40;
 const BIRD_HEIGHT = 30;
 
-// Game state
 let birdY = canvas.height / 2, birdVel = 0, score = 0, gameOver = false;
 let pipes = [];
 
-// Load images
 const loadImage = (src) => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -51,12 +47,12 @@ const loadImage = (src) => {
   });
 };
 
-// Use Imgur images for pillars that work
+// ✅ All image links work now
 const assets = {
   bg: 'https://raw.githubusercontent.com/samuelcust/flappy-bird-assets/master/sprites/background-day.png',
   base: 'https://raw.githubusercontent.com/samuelcust/flappy-bird-assets/master/sprites/base.png',
   bird: 'https://raw.githubusercontent.com/samuelcust/flappy-bird-assets/master/sprites/yellowbird-midflap.png',
-  pillar: 'https://i.imgur.com/2RXXdYt.png'  // Reliable temple column image
+  pipe: 'https://raw.githubusercontent.com/samuelcust/flappy-bird-assets/master/sprites/pipe-green.png'
 };
 
 let images = {};
@@ -86,15 +82,14 @@ function update() {
     gameOver = true;
   }
 
-  // Update pipes
   for (let pipe of pipes) {
     pipe.x -= 4;
-    // Collision
+
     if (
       100 + BIRD_WIDTH > pipe.x &&
       100 < pipe.x + PIPE_WIDTH &&
-      (birdY < pipe.y + images.pillar.height ||
-       birdY + BIRD_HEIGHT > pipe.y + images.pillar.height + GAP)
+      (birdY < pipe.y + images.pipe.height ||
+       birdY + BIRD_HEIGHT > pipe.y + images.pipe.height + GAP)
     ) {
       gameOver = true;
     }
@@ -105,9 +100,8 @@ function update() {
     }
   }
 
-  // Spawn pipes
   if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
-    const y = -Math.floor(Math.random() * (images.pillar.height - 100));
+    const y = -Math.floor(Math.random() * (images.pipe.height - 100));
     pipes.push({ x: canvas.width, y: y, passed: false });
   }
 
@@ -115,41 +109,29 @@ function update() {
 }
 
 function draw() {
-  // Background
   ctx.drawImage(images.bg, 0, 0, canvas.width, canvas.height);
 
-  // Pipes
   for (let p of pipes) {
-    // Top pillar (flipped)
+    // Top pipe (flipped)
     ctx.save();
-    ctx.translate(p.x + PIPE_WIDTH / 2, p.y + images.pillar.height);
+    ctx.translate(p.x + PIPE_WIDTH / 2, p.y + images.pipe.height);
     ctx.scale(1, -1);
-    ctx.drawImage(images.pillar, -PIPE_WIDTH / 2, 0, PIPE_WIDTH, images.pillar.height);
+    ctx.drawImage(images.pipe, -PIPE_WIDTH / 2, 0, PIPE_WIDTH, images.pipe.height);
     ctx.restore();
 
-    // Bottom pillar
-    ctx.drawImage(
-      images.pillar,
-      p.x,
-      p.y + images.pillar.height + GAP,
-      PIPE_WIDTH,
-      images.pillar.height
-    );
+    // Bottom pipe
+    ctx.drawImage(images.pipe, p.x, p.y + images.pipe.height + GAP, PIPE_WIDTH, images.pipe.height);
   }
 
-  // Ground (base)
   ctx.drawImage(images.base, 0, canvas.height - images.base.height, canvas.width, images.base.height);
-
-  // Bird
   ctx.drawImage(images.bird, 100, birdY, BIRD_WIDTH, BIRD_HEIGHT);
 
-  // Score
   ctx.fillStyle = 'white';
   ctx.font = '30px Arial';
   ctx.fillText(`Score: ${score}`, 20, 40);
 
   if (gameOver) {
-    ctx.fillText('Game Over! Click to restart', 50, canvas.height / 2);
+    ctx.fillText('Game Over! Press Space to restart', 50, canvas.height / 2);
   }
 }
 
@@ -164,9 +146,12 @@ function startGame() {
   loop();
 }
 
-canvas.addEventListener('click', () => {
-  if (gameOver) resetGame();
-  birdVel = FLAP;
+// ✅ SPACEBAR jump control
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    if (gameOver) resetGame();
+    birdVel = FLAP;
+  }
 });
 
 loadAssets();
